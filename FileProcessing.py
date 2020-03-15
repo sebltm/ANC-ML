@@ -19,6 +19,7 @@ class FileIterator:
         self.__next__()
 
     def __next__(self):
+
         self.noiseMfcc = np.empty((64, 112))
         self.noisyMusicMfcc = np.empty((64, 112))
 
