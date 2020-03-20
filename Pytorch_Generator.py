@@ -17,71 +17,36 @@ class Net(nn.Module):
 
         # Encoder
         self.encodingLayer1 = nn.Sequential(
-<<<<<<< HEAD
             nn.Conv2d(1, 64, kernel_size=2, stride=1, padding=0),
         )
 
         self.encodingLayer2 = nn.Sequential(
             nn.Conv2d(64, 128, kernel_size=2, stride=1, padding=0),
-=======
-            nn.Conv1d(1, 64, kernel_size=2, stride=1, padding=0),
-        )
-
-        self.encodingLayer2 = nn.Sequential(
-            nn.Conv1d(64, 128, kernel_size=2, stride=1, padding=0),
->>>>>>> cf262c8949ccaca10b4510c012d5dd73b2e9b7a3
-            nn.Dropout(0.2)
         )
 
         self.encodingLayer3 = nn.Sequential(
-<<<<<<< HEAD
             nn.Conv2d(128, 256, kernel_size=2, stride=1, padding=0),
         )
 
         self.encodingLayer4 = nn.Sequential(
             nn.Conv2d(256, 512, kernel_size=2, stride=1, padding=0),
-=======
-            nn.Conv1d(128, 256, kernel_size=2, stride=1, padding=0),
-        )
-
-        self.encodingLayer4 = nn.Sequential(
-            nn.Conv1d(256, 512, kernel_size=2, stride=1, padding=0),
->>>>>>> cf262c8949ccaca10b4510c012d5dd73b2e9b7a3
-            nn.Dropout(0.2)
         )
 
         # Decoder
         self.decodingLayer1 = nn.Sequential(
-<<<<<<< HEAD
             nn.ConvTranspose2d(512, 256, kernel_size=2, stride=1, padding=0),
         )
 
         self.decodingLayer2 = nn.Sequential(
             nn.ConvTranspose2d(256, 128, kernel_size=2, stride=1, padding=0),
-=======
-            nn.ConvTranspose1d(512, 256, kernel_size=2, stride=1, padding=0),
-        )
-
-        self.decodingLayer2 = nn.Sequential(
-            nn.ConvTranspose1d(256, 128, kernel_size=2, stride=1, padding=0),
->>>>>>> cf262c8949ccaca10b4510c012d5dd73b2e9b7a3
-            nn.Dropout(0.2)
         )
 
         self.decodingLayer3 = nn.Sequential(
-<<<<<<< HEAD
             nn.ConvTranspose2d(128, 64, kernel_size=2, stride=1, padding=0),
         )
 
         self.decodingLayer4 = nn.Sequential(
             nn.ConvTranspose2d(64, 1, kernel_size=2, stride=1, padding=0),
-=======
-            nn.ConvTranspose1d(128, 64, kernel_size=2, stride=1, padding=0),
-        )
-
-        self.decodingLayer4 = nn.Sequential(
-            nn.ConvTranspose1d(64, 1, kernel_size=2, stride=1, padding=0),
->>>>>>> cf262c8949ccaca10b4510c012d5dd73b2e9b7a3
         )
 
     def forward(self, x):
@@ -111,13 +76,8 @@ class Net(nn.Module):
             self.iterator = FileProcessing.FileIterator()
             for num_batch in range(batch):
 
-<<<<<<< HEAD
                 realNoise = np.empty((size_batch, 1, 64, 112))
                 musicGenerator = np.empty((size_batch, 1, 64, 112))
-=======
-                realNoise = np.empty((size_batch, 1, 57330))
-                musicGenerator = np.empty((size_batch, 1, 57330))
->>>>>>> cf262c8949ccaca10b4510c012d5dd73b2e9b7a3
 
                 for i in range(size_batch):
                     music, noise = next(self.iterator)
@@ -150,13 +110,8 @@ class Net(nn.Module):
 
         self.iterator = FileProcessing.FileIterator()
 
-<<<<<<< HEAD
         realNoise = np.empty((size_batch, 1, 64, 112))
         musicGenerator = np.empty((size_batch, 1, 64, 112))
-=======
-        realNoise = np.empty((size_batch, 1, 57330))
-        musicGenerator = np.empty((size_batch, 1, 57330))
->>>>>>> cf262c8949ccaca10b4510c012d5dd73b2e9b7a3
 
         for i in range(size_batch):
             music, noise = next(self.iterator)
@@ -186,11 +141,7 @@ class Net(nn.Module):
 
         self.iterator = FileProcessing.FileIterator()
 
-<<<<<<< HEAD
         generatorInput = np.empty((size_batch, 1, 64, 112))
-=======
-        generatorInput = np.empty((size_batch, 1, 57330))
->>>>>>> cf262c8949ccaca10b4510c012d5dd73b2e9b7a3
 
         for i in range(size_batch):
             music, noise = next(self.iterator)
@@ -203,14 +154,6 @@ class Net(nn.Module):
             output = self(input_network)
 
         for i, mfcc in enumerate(output.cpu().detach().numpy()):
-<<<<<<< HEAD
             tds = librosa.feature.inverse.mfcc_to_audio(mfcc[0], 64)
             samplerate = 44100
             sf.write("GANOutput/" + str(i) + ".wav", tds, samplerate, subtype='DOUBLE')
-=======
-            # tds = librosa.feature.inverse.mfcc_to_audio(mfcc[0], 64)
-            samplerate = 44100
-            file = open("GANOutput/" + str(i) + ".wav", "wb")
-            file.write(mfcc.tobytes())
-            # sf.write("GANOutput/" + str(i) + ".wav", mfcc, samplerate, subtype='DOUBLE')
->>>>>>> cf262c8949ccaca10b4510c012d5dd73b2e9b7a3

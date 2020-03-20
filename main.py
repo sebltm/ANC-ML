@@ -5,7 +5,7 @@ import GAN
 import Pytorch_Generator
 
 if __name__ == "__main__":
-    learning_rate = 0.0001
+    learning_rate = 0.00001
 
     # generator = Pytorch_Generator.Net()
     #
