@@ -54,8 +54,8 @@ class GAN:
             self.iterator = AudioDataset.NoisyMusicDataset()
             for num_batch in range(batch):
 
-                real_classifier = np.empty((size_batch, 2, 64, 112))
-                music_generator = np.empty((size_batch, 1, 64, 112))
+                real_classifier = np.empty((size_batch, 2, 200, 112))
+                music_generator = np.empty((size_batch, 1, 200, 112))
 
                 for i in range(size_batch):
                     noise, music, noise_name, music_name = next(self.iterator)
@@ -81,7 +81,7 @@ class GAN:
                 generator_output = self.GeneratorModel(generator_input).detach()
 
                 # rebundle the generator's output into a batch for the classifier
-                fake_data = np.empty((size_batch, 2, 64, 112))
+                fake_data = np.empty((size_batch, 2, 200, 112))
                 for i in range(size_batch):
                     generator_output_cpu = generator_output.cpu().detach().numpy()
                     fake_data[i] = np.vstack(([real_classifier[i][0]], generator_output_cpu[i]))
@@ -100,7 +100,7 @@ class GAN:
                 self.GeneratorModel.zero_grad()
 
                 # rebundle the generator's output into a batch for the classifier
-                fake_data = np.empty((size_batch, 2, 64, 112))
+                fake_data = np.empty((size_batch, 2, 200, 112))
                 for i in range(size_batch):
                     generator_output_cpu = generator_output.cpu().detach().numpy()
                     fake_data[i] = np.vstack(([real_classifier[i][0]], generator_output_cpu[i]))

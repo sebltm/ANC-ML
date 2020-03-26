@@ -75,8 +75,8 @@ class Net(nn.Module):
             self.iterator = AudioDataset.NoisyMusicDataset()
             for num_batch in range(batch):
 
-                fake = np.empty((size_batch, 2, 64, 112))
-                real = np.empty((size_batch, 2, 64, 112))
+                fake = np.empty((size_batch, 2, 128, 112))
+                real = np.empty((size_batch, 2, 128, 112))
 
                 for i in range(size_batch):
                     noise, music, noise_file, music_file = next(self.iterator)
@@ -126,8 +126,8 @@ class Net(nn.Module):
 
         self.iterator = AudioDataset.NoisyMusicDataset()
 
-        fake = np.empty((size_batch, 2, 64, 112))
-        real = np.empty((size_batch, 2, 64, 112))
+        fake = np.empty((size_batch, 2, 128, 112))
+        real = np.empty((size_batch, 2, 128, 112))
 
         for i in range(size_batch):
             music, noise = next(self.iterator)

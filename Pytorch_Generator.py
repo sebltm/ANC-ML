@@ -82,8 +82,8 @@ class Net(nn.Module):
             self.iterator = AudioDataset.NoisyMusicDataset()
             for num_batch in range(batch):
 
-                realNoise = np.empty((size_batch, 1, 64, 112))
-                musicGenerator = np.empty((size_batch, 1, 64, 112))
+                realNoise = np.empty((size_batch, 1, 128, 112))
+                musicGenerator = np.empty((size_batch, 1, 128, 112))
 
                 for i in range(size_batch):
                     noise, music, noise_name, music_name = next(self.iterator)
@@ -111,7 +111,8 @@ class Net(nn.Module):
                 print("Epoch {}, batch {}, Generator loss: {}".format(epoch + 1, num_batch + 1, loss))
                 print()
 
-            self.generate(iterator=self.iterator, folder="GeneratorOutput")
+                if num_batch % 50 == 0 :
+                    self.generate(iterator=AudioDataset.NoisyMusicDataset(folderIndex=1), folder="GeneratorOutput")
 
             if epoch == epochs-1:
                 answer = input("Do you want to save the current network?")
@@ -127,8 +128,8 @@ class Net(nn.Module):
         generator_accuracy = []
         size_batch = 10
 
-        realNoise = np.empty((size_batch, 1, 64, 112))
-        musicGenerator = np.empty((size_batch, 1, 64, 112))
+        realNoise = np.empty((size_batch, 1, 128, 112))
+        musicGenerator = np.empty((size_batch, 1, 128, 112))
 
         for i in range(size_batch):
             noise, music, noise_name, music_name = next(self.iterator)
@@ -159,7 +160,7 @@ class Net(nn.Module):
 
         for i in range(0, 20 * size_batch):
             _, music, noise_name, music_name = next(self.iterator)
-            generatorInput = np.empty((1, 1, 64, 112))
+            generatorInput = np.empty((1, 1, 128, 112))
 
             if (i % 50) == 0:
                 generatorInput[0] = music
@@ -171,6 +172,6 @@ class Net(nn.Module):
                     output = self(input_network)
 
                 for _, mfcc in enumerate(output.cpu().detach().numpy()):
-                    tds = librosa.feature.inverse.mfcc_to_audio(mfcc[0], 64)
+                    tds = librosa.feature.inverse.mfcc_to_audio(mfcc[0], 500)
                     samplerate = 44100
                     sf.write(folder + "/" + str(i // 50) + ".wav", tds, samplerate, subtype='FLOAT')
