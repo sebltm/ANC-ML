@@ -37,14 +37,14 @@ class GAN:
 
     def train(self):
         epochs = 45
-        batch = 900
-        size_batch = 10
+        size_batch = 2
+        batch = 3*500//size_batch
 
         self.ClassifierModel.apply(self.weights_init)
-        self.GeneratorModel.apply(self.weights_init)
+        # self.GeneratorModel.apply(self.weights_init)
 
         # train classifier on small batch
-        self.ClassifierModel.trainClassifier(self.optimiserClassifier, self.criterion, self.device)
+        # self.ClassifierModel.trainClassifier(self.optimiserClassifier, self.criterion, self.device)
 
         print("Training GAN with {} epochs, {} batches of size {}".format(epochs, batch, size_batch))
 
@@ -54,8 +54,8 @@ class GAN:
             self.iterator = AudioDataset.NoisyMusicDataset()
             for num_batch in range(batch):
 
-                real_classifier = np.empty((size_batch, 2, 64, 112))
-                music_generator = np.empty((size_batch, 1, 64, 112))
+                real_classifier = np.empty((size_batch, 2, 57330))
+                music_generator = np.empty((size_batch, 1, 57330))
 
                 for i in range(size_batch):
                     noise, music, noise_name, music_name = next(self.iterator)
@@ -81,7 +81,7 @@ class GAN:
                 generator_output = self.GeneratorModel(generator_input).detach()
 
                 # rebundle the generator's output into a batch for the classifier
-                fake_data = np.empty((size_batch, 2, 64, 112))
+                fake_data = np.empty((size_batch, 2, 57330))
                 for i in range(size_batch):
                     generator_output_cpu = generator_output.cpu().detach().numpy()
                     fake_data[i] = np.vstack(([real_classifier[i][0]], generator_output_cpu[i]))
@@ -100,7 +100,7 @@ class GAN:
                 self.GeneratorModel.zero_grad()
 
                 # rebundle the generator's output into a batch for the classifier
-                fake_data = np.empty((size_batch, 2, 64, 112))
+                fake_data = np.empty((size_batch, 2, 57330))
                 for i in range(size_batch):
                     generator_output_cpu = generator_output.cpu().detach().numpy()
                     fake_data[i] = np.vstack(([real_classifier[i][0]], generator_output_cpu[i]))
@@ -117,7 +117,7 @@ class GAN:
                                                                                            classifier_real_loss / 2,
                                                                                            generator_loss.data))
 
-            self.GeneratorModel.generate(iterator=self.iterator, folder="GANOutput")
+            self.GeneratorModel.generate(iterator=AudioDataset.NoisyMusicDataset(folderIndex=1), folder="GANOutput")
 
             while False:
                 answer = input("Do you want to save the current network?")

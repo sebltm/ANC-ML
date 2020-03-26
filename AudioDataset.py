@@ -40,7 +40,7 @@ class NoisyMusicDataset(Dataset):
         # SAMPLE A NOISE
         noise, _ = librosa.load(noiseFile.as_posix(), mono=True, sr=self.samplerate, duration=1.30)
         noiseNeg = np.negative(noise)
-        noise_mfcc = librosa.feature.mfcc(noiseNeg[:57330], sr=self.samplerate, n_mfcc=64)
+        # noise_mfcc = librosa.feature.mfcc(noiseNeg[:57330], sr=self.samplerate, n_mfcc=64)
         self.noiseMfcc = noise[:57330]
 
         # SAMPLE A NOISY MUSIC
@@ -48,7 +48,7 @@ class NoisyMusicDataset(Dataset):
         raw_music_read = raw_music.read(dtype=np.float, always_2d=False)
         music_transpose = raw_music_read.T
 
-        music_mfcc = librosa.feature.mfcc(music_transpose, sr=self.samplerate, n_mfcc=64)
+        # music_mfcc = librosa.feature.mfcc(music_transpose, sr=self.samplerate, n_mfcc=64)
         self.noisyMusicMfcc = music_transpose
 
         self.musicIndex += 1

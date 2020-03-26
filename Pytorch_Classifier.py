@@ -20,26 +20,26 @@ class Net(nn.Module):
         self.iterator = AudioDataset.NoisyMusicDataset()
 
         self.layer1 = nn.Sequential(
-            nn.Conv2d(2, 32, kernel_size=3, stride=1, padding=0),
+            nn.Conv1d(2, 32, kernel_size=3, stride=1, padding=0),
             nn.Tanhshrink(),
-            nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=0),
-            nn.MaxPool2d(kernel_size=2, stride=1),
+            nn.Conv1d(32, 64, kernel_size=3, stride=1, padding=0),
+            nn.MaxPool1d(kernel_size=2, stride=1),
             nn.Dropout(0.25)
         )
 
         self.layer2 = nn.Sequential(
-            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=0),
+            nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=0),
             nn.Tanhshrink(),
-            nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=0),
-            nn.MaxPool2d(kernel_size=2, stride=1),
+            nn.Conv1d(64, 128, kernel_size=3, stride=1, padding=0),
+            nn.MaxPool1d(kernel_size=2, stride=1),
             nn.Dropout(0.5)
         )
 
         self.layer3 = nn.Sequential(
-            nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=0),
+            nn.Conv1d(128, 128, kernel_size=3, stride=1, padding=0),
             nn.Tanhshrink(),
-            nn.Conv2d(128, 512, kernel_size=3, stride=1, padding=0),
-            nn.MaxPool2d(kernel_size=2, stride=1),
+            nn.Conv1d(128, 512, kernel_size=3, stride=1, padding=0),
+            nn.MaxPool1d(kernel_size=2, stride=1),
             nn.Dropout(0.5)
         )
 
@@ -75,8 +75,8 @@ class Net(nn.Module):
             self.iterator = AudioDataset.NoisyMusicDataset()
             for num_batch in range(batch):
 
-                fake = np.empty((size_batch, 2, 64, 112))
-                real = np.empty((size_batch, 2, 64, 112))
+                fake = np.empty((size_batch, 2, 57330))
+                real = np.empty((size_batch, 2, 57330))
 
                 for i in range(size_batch):
                     noise, music, noise_file, music_file = next(self.iterator)
@@ -126,8 +126,8 @@ class Net(nn.Module):
 
         self.iterator = AudioDataset.NoisyMusicDataset()
 
-        fake = np.empty((size_batch, 2, 64, 112))
-        real = np.empty((size_batch, 2, 64, 112))
+        fake = np.empty((size_batch, 2, 57330))
+        real = np.empty((size_batch, 2, 57330))
 
         for i in range(size_batch):
             music, noise = next(self.iterator)

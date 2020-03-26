@@ -17,7 +17,7 @@ if __name__ == "__main__":
         generator = Pytorch_Generator.Net()
 
         criterion = nn.MSELoss()
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        device = torch.device("cuda")
 
         generator.to(device)
         criterion.to(device)
@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
         generator = Pytorch_Generator.Net()
 
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        device = torch.device("cuda")
         generator.to(device)
 
         generator.load_state_dict(torch.load("generatorModel.pt"))
