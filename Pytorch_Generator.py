@@ -16,43 +16,43 @@ class Net(nn.Module):
 
         # Encoder
         self.encodingLayer1 = nn.Sequential(
-            nn.Conv1d(1, 64, kernel_size=2, stride=1, padding=0),
+            nn.Conv1d(1, 64, kernel_size=50, stride=1, padding=0),
             # nn.BatchNorm2d(64),
         )
 
         self.encodingLayer2 = nn.Sequential(
-            nn.Conv1d(64, 128, kernel_size=2, stride=1, padding=0),
+            nn.Conv1d(64, 128, kernel_size=50, stride=1, padding=0),
             # nn.BatchNorm2d(128),
         )
 
         self.encodingLayer3 = nn.Sequential(
-            nn.Conv1d(128, 256, kernel_size=2, stride=1, padding=0),
+            nn.Conv1d(128, 256, kernel_size=50, stride=1, padding=0),
             # nn.BatchNorm2d(256),
         )
 
         self.encodingLayer4 = nn.Sequential(
-            nn.Conv1d(256, 512, kernel_size=2, stride=1, padding=0),
+            nn.Conv1d(256, 512, kernel_size=50, stride=1, padding=0),
             # nn.BatchNorm2d(512),
         )
 
         # Decoder
         self.decodingLayer1 = nn.Sequential(
-            nn.ConvTranspose1d(512, 256, kernel_size=2, stride=1, padding=0),
+            nn.ConvTranspose1d(512, 256, kernel_size=50, stride=1, padding=0),
             # nn.BatchNorm2d(256),
         )
 
         self.decodingLayer2 = nn.Sequential(
-            nn.ConvTranspose1d(256, 128, kernel_size=2, stride=1, padding=0),
+            nn.ConvTranspose1d(256, 128, kernel_size=50, stride=1, padding=0),
             # nn.BatchNorm2d(128),
         )
 
         self.decodingLayer3 = nn.Sequential(
-            nn.ConvTranspose1d(128, 64, kernel_size=2, stride=1, padding=0),
+            nn.ConvTranspose1d(128, 64, kernel_size=50, stride=1, padding=0),
             # nn.BatchNorm2d(64),
         )
 
         self.decodingLayer4 = nn.Sequential(
-            nn.ConvTranspose1d(64, 1, kernel_size=2, stride=1, padding=0),
+            nn.ConvTranspose1d(64, 1, kernel_size=50, stride=1, padding=0),
         )
 
     def forward(self, x):
@@ -72,8 +72,8 @@ class Net(nn.Module):
         self.device = device
 
         epochs = 5
-        size_batch = 10
-        batch = 9*1000//size_batch
+        size_batch = 5
+        batch = 3*500//size_batch
 
         print("Training classifier with {} epochs, {} batches of size {}".format(epochs, batch, size_batch))
 
@@ -110,7 +110,8 @@ class Net(nn.Module):
                 print("Epoch {}, batch {}, Generator loss: {}".format(epoch + 1, num_batch + 1, loss))
                 print()
 
-            self.generate(iterator=AudioDataset.NoisyMusicDataset(folderIndex=1), folder="GeneratorOutput")
+                if num_batch % 50 == 0:
+                    self.generate(iterator=AudioDataset.NoisyMusicDataset(folderIndex=1), folder="GeneratorOutput")
 
             if epoch == epochs-1:
                 answer = input("Do you want to save the current network?")
