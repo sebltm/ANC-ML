@@ -1,14 +1,10 @@
-import Pytorch_Generator as Generator
-import Pytorch_Classifier as Classifier
-import TrainTest
-import FileProcessing
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
-from torchsummary import summary
-from sklearn.metrics import accuracy_score, mean_squared_error
-import librosa.feature
-import soundfile as sf
+
+import AudioDataset
+import Pytorch_Classifier as Classifier
+import Pytorch_Generator as Generator
 
 
 class GAN:
@@ -29,29 +25,40 @@ class GAN:
         self.optimiserGenerator = torch.optim.Adam(self.GeneratorModel.parameters(), lr=self.learning_rate)
         self.optimiserClassifier = torch.optim.Adam(self.ClassifierModel.parameters(), lr=self.learning_rate)
 
-        self.iterator = FileProcessing.FileIterator()
+        self.iterator = AudioDataset.NoisyMusicDataset()
+
+    def weights_init(self, m):
+        classname = m.__class__.__name__
+        if classname.find('Conv') != -1:
+            nn.init.normal_(m.weight.data, 0.0, 0.02)
+        elif classname.find('BatchNorm') != -1:
+            nn.init.normal_(m.weight.data, 1.0, 0.02)
+            nn.init.constant_(m.bias.data, 0)
 
     def train(self):
         epochs = 45
-        batch = 20
+        batch = 900
         size_batch = 10
 
+        self.ClassifierModel.apply(self.weights_init)
+        self.GeneratorModel.apply(self.weights_init)
+
         # train classifier on small batch
-        # self.ClassifierModel.trainClassifier(self.optimiserClassifier, self.criterion, self.device)
+        self.ClassifierModel.trainClassifier(self.optimiserClassifier, self.criterion, self.device)
 
         print("Training GAN with {} epochs, {} batches of size {}".format(epochs, batch, size_batch))
 
         self.ClassifierModel.train()
         for epoch in range(epochs):
             self.GeneratorModel.train()
-            self.iterator = FileProcessing.FileIterator(noise_samples=10)
+            self.iterator = AudioDataset.NoisyMusicDataset()
             for num_batch in range(batch):
 
                 real_classifier = np.empty((size_batch, 2, 64, 112))
                 music_generator = np.empty((size_batch, 1, 64, 112))
 
                 for i in range(size_batch):
-                    music, noise = next(self.iterator)
+                    noise, music, noise_name, music_name = next(self.iterator)
 
                     real_classifier[i] = np.vstack(([noise], [noise]))
                     music_generator[i] = [music]
@@ -110,5 +117,13 @@ class GAN:
                                                                                            classifier_real_loss / 2,
                                                                                            generator_loss.data))
 
-            self.ClassifierModel.testClassifier()
-            self.GeneratorModel.generate()
+            self.GeneratorModel.generate(iterator=self.iterator, folder="GANOutput")
+
+            while False:
+                answer = input("Do you want to save the current network?")
+                if answer == "y":
+                    torch.save(self.GeneratorModel.state_dict(), "generatorGANModel.pt")
+                    torch.save(self.ClassifierModel.state_dict(), "classifierGANModel.pt")
+                    break
+                elif answer == "n":
+                    break

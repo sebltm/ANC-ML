@@ -1,11 +1,10 @@
 import librosa
 import numpy as np
+import soundfile as sf
 import torch
 import torch.nn as nn
-from sklearn.metrics import accuracy_score
-import soundfile as sf
 
-import FileProcessing
+import AudioDataset
 
 
 class Net(nn.Module):
@@ -18,31 +17,38 @@ class Net(nn.Module):
         # Encoder
         self.encodingLayer1 = nn.Sequential(
             nn.Conv2d(1, 64, kernel_size=2, stride=1, padding=0),
+            # nn.BatchNorm2d(64),
         )
 
         self.encodingLayer2 = nn.Sequential(
             nn.Conv2d(64, 128, kernel_size=2, stride=1, padding=0),
+            # nn.BatchNorm2d(128),
         )
 
         self.encodingLayer3 = nn.Sequential(
             nn.Conv2d(128, 256, kernel_size=2, stride=1, padding=0),
+            # nn.BatchNorm2d(256),
         )
 
         self.encodingLayer4 = nn.Sequential(
             nn.Conv2d(256, 512, kernel_size=2, stride=1, padding=0),
+            # nn.BatchNorm2d(512),
         )
 
         # Decoder
         self.decodingLayer1 = nn.Sequential(
             nn.ConvTranspose2d(512, 256, kernel_size=2, stride=1, padding=0),
+            # nn.BatchNorm2d(256),
         )
 
         self.decodingLayer2 = nn.Sequential(
             nn.ConvTranspose2d(256, 128, kernel_size=2, stride=1, padding=0),
+            # nn.BatchNorm2d(128),
         )
 
         self.decodingLayer3 = nn.Sequential(
             nn.ConvTranspose2d(128, 64, kernel_size=2, stride=1, padding=0),
+            # nn.BatchNorm2d(64),
         )
 
         self.decodingLayer4 = nn.Sequential(
@@ -65,34 +71,38 @@ class Net(nn.Module):
         self.criterion = criterion
         self.device = device
 
-        epochs = 3
-        batch = 100
-        size_batch = 20
+        epochs = 15
+        batch = 900
+        size_batch = 10
 
         print("Training classifier with {} epochs, {} batches of size {}".format(epochs, batch, size_batch))
 
         self.train()
         for epoch in range(epochs):
-            self.iterator = FileProcessing.FileIterator()
+            self.iterator = AudioDataset.NoisyMusicDataset()
             for num_batch in range(batch):
 
                 realNoise = np.empty((size_batch, 1, 64, 112))
                 musicGenerator = np.empty((size_batch, 1, 64, 112))
 
                 for i in range(size_batch):
-                    music, noise = next(self.iterator)
+                    noise, music, noise_name, music_name = next(self.iterator)
 
-                    realNoise[i] = [noise]
-                    musicGenerator[i] = [music]
+                    try:
+                        realNoise[i] = [noise]
+                        musicGenerator[i] = [music]
+                    except ValueError as e:
+                        print(e)
+                        print(music_name, noise_name)
+                        i -= 1
 
-                # Train fake
                 optimiser.zero_grad()
 
                 input_network_tensor = torch.as_tensor(musicGenerator, dtype=torch.float32).to(device)
 
                 output = self(input_network_tensor)
 
-                labels_tensor = torch.as_tensor(musicGenerator, dtype=torch.float32).to(device)
+                labels_tensor = torch.as_tensor(realNoise, dtype=torch.float32).to(device)
 
                 loss = criterion(output, labels_tensor)
                 loss.backward()
@@ -101,20 +111,27 @@ class Net(nn.Module):
                 print("Epoch {}, batch {}, Generator loss: {}".format(epoch + 1, num_batch + 1, loss))
                 print()
 
-            self.testGenerator(device)
+            self.generate(iterator=self.iterator, folder="GeneratorOutput")
+
+            if epoch == epochs-1:
+                answer = input("Do you want to save the current network?")
+                if answer == "y":
+                    torch.save(self.state_dict(), "generatorModel.pt")
+
+                answer = input("Do you want to train for 5 more epochs?")
+                if answer == "y":
+                    epochs += 5
 
     def testGenerator(self, device):
         # test
         generator_accuracy = []
         size_batch = 10
 
-        self.iterator = FileProcessing.FileIterator()
-
         realNoise = np.empty((size_batch, 1, 64, 112))
         musicGenerator = np.empty((size_batch, 1, 64, 112))
 
         for i in range(size_batch):
-            music, noise = next(self.iterator)
+            noise, music, noise_name, music_name = next(self.iterator)
 
             realNoise[i] = [noise]
             musicGenerator[i] = [music]
@@ -134,26 +151,26 @@ class Net(nn.Module):
         #
         # print("Average accuracy of noise: {}".format(np.average(generator_accuracy)))
 
-        self.generate()
+    def generate(self, iterator: AudioDataset, folder):
+        if iterator is not None:
+            self.iterator = iterator
 
-    def generate(self):
-        size_batch = 2
+        size_batch = 10
 
-        self.iterator = FileProcessing.FileIterator()
+        for i in range(0, 20 * size_batch):
+            _, music, noise_name, music_name = next(self.iterator)
+            generatorInput = np.empty((1, 1, 64, 112))
 
-        generatorInput = np.empty((size_batch, 1, 64, 112))
+            if (i % 50) == 0:
+                generatorInput[0] = music
+                print(noise_name, music_name)
 
-        for i in range(size_batch):
-            music, noise = next(self.iterator)
+                input_network = torch.as_tensor(generatorInput, dtype=torch.float32).to(self.device)
 
-            generatorInput[i] = [music]
+                with torch.no_grad():
+                    output = self(input_network)
 
-        input_network = torch.as_tensor(generatorInput, dtype=torch.float32).to(self.device)
-
-        with torch.no_grad():
-            output = self(input_network)
-
-        for i, mfcc in enumerate(output.cpu().detach().numpy()):
-            tds = librosa.feature.inverse.mfcc_to_audio(mfcc[0], 64)
-            samplerate = 44100
-            sf.write("GANOutput/" + str(i) + ".wav", tds, samplerate, subtype='DOUBLE')
+                for _, mfcc in enumerate(output.cpu().detach().numpy()):
+                    tds = librosa.feature.inverse.mfcc_to_audio(mfcc[0], 64)
+                    samplerate = 44100
+                    sf.write(folder + "/" + str(i // 50) + ".wav", tds, samplerate, subtype='FLOAT')

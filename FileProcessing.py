@@ -2,34 +2,34 @@ import numpy as np
 import librosa
 import librosa.feature
 import soundfile as sf
+import torchaudio
 from pathlib import Path
 
+from torch.utils.data import Dataset
 
-class FileIterator:
 
-    def __init__(self, samplerate=44100, noise_samples=50):
+class NoisyMusicDataset(Dataset):
+
+    def __init__(self, samplerate=44100):
         self.samplerate = samplerate
         self.folders = sorted(list(Path("../Sounds/Processed/").glob("*")))
+        self.noiseFiles = sorted(list(Path("../Sounds/UrbanSound8K/audio/").glob("**/*.wav")))
 
-        self.folderIndex = 0
         self.sampleIndex = 0
-        self.noiseSamples = noise_samples
+
+        self.noiseMfcc = np.empty((64, 112))
+        self.noisyMusicMfcc = np.empty((64, 112))
 
     def __iter__(self):
         self.__next__()
 
     def __next__(self):
-
-        self.noiseMfcc = np.empty((64, 112))
-        self.noisyMusicMfcc = np.empty((64, 112))
+        self.noiseSamples = 30
 
         folder = self.folders[self.sampleIndex // self.noiseSamples]
-
-        self.noiseFiles = sorted(list(Path("../Sounds/UrbanSound8K/audio/").glob("**/*.wav")))
         self.noisyMusicFiles = sorted(list(Path(folder).glob("[0-9]*.RAW")))
 
-        sample_index = self.sampleIndex % self.noiseSamples
-        print(self.sampleIndex // self.noiseSamples * self.noiseSamples + sample_index)
+        sample_index = self.sampleIndex % self.noiseSamples\
 
         # SAMPLE A NOISE
         raw_noise = sf.SoundFile(self.noiseFiles[sample_index].as_posix())
@@ -66,7 +66,7 @@ class FileIterator:
 
 if __name__ == "__main__":
 
-    iterator = FileIterator()
+    iterator = NoisyMusicDataset()
 
     for _ in range(10):
         next(iterator)

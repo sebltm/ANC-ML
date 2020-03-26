@@ -1,10 +1,13 @@
-import torch
+import sys
+
 import numpy as np
+import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from sklearn.metrics import accuracy_score
 
-import FileProcessing
+import AudioDataset
+
+np.set_printoptions(threshold=sys.maxsize)
 
 
 class Net(nn.Module):
@@ -14,7 +17,7 @@ class Net(nn.Module):
 
         super(Net, self).__init__()
 
-        self.iterator = FileProcessing.FileIterator()
+        self.iterator = AudioDataset.NoisyMusicDataset()
 
         self.layer1 = nn.Sequential(
             nn.Conv2d(2, 32, kernel_size=3, stride=1, padding=0),
@@ -53,7 +56,7 @@ class Net(nn.Module):
         x = self.layer2(x)
         x = self.layer3(x)
         x = x.view(-1, x.size(1))
-        x = F.relu(self.fc1(x))
+        x = self.fc1(x)
         return x
 
     def trainClassifier(self, optimiser, criterion, device):
@@ -62,21 +65,21 @@ class Net(nn.Module):
         self.device = device
 
         epochs = 3
-        batch = 100
-        size_batch = 2
+        batch = 15
+        size_batch = 10
 
         print("Training classifier with {} epochs, {} batches of size {}".format(epochs, batch, size_batch))
 
         self.train()
         for epoch in range(epochs):
-            self.iterator = FileProcessing.FileIterator(noise_samples=20)
+            self.iterator = AudioDataset.NoisyMusicDataset()
             for num_batch in range(batch):
 
                 fake = np.empty((size_batch, 2, 64, 112))
                 real = np.empty((size_batch, 2, 64, 112))
 
                 for i in range(size_batch):
-                    music, noise = next(self.iterator)
+                    noise, music, noise_file, music_file = next(self.iterator)
 
                     fake[i] = np.vstack(([noise], [music]))
                     real[i] = np.vstack(([noise], [noise]))
@@ -112,10 +115,8 @@ class Net(nn.Module):
                 # loss_fake.backward()
                 # self.optimiser.step()
 
-                print("Epoch {}, batch {}, Classifier loss: {}".format(epoch+1, num_batch+1, loss_real))
+                print("Epoch {}, batch {}, Classifier loss: {}".format(epoch + 1, num_batch + 1, loss_real))
                 print()
-
-            self.testClassifier()
 
     def testClassifier(self):
         # test
@@ -123,7 +124,7 @@ class Net(nn.Module):
         noise_accuracy = []
         size_batch = 2
 
-        self.iterator = FileProcessing.FileIterator()
+        self.iterator = AudioDataset.NoisyMusicDataset()
 
         fake = np.empty((size_batch, 2, 64, 112))
         real = np.empty((size_batch, 2, 64, 112))
@@ -159,16 +160,15 @@ class Net(nn.Module):
         with torch.no_grad():
             output = self(input_network)
 
-        labels = torch.ones(output.size())
+        labels = torch.ones(output.size()[0])
 
-        softmax = torch.exp(output).cpu()
-        prob = list(softmax.numpy())
+        softmax = output.detach()
+
+        prob = list(softmax.cpu().numpy())
         predictions = np.argmax(prob, axis=1)
 
-        print("Noise predictions: ", predictions)
-
         # accuracy on training set
-        accuracy = accuracy_score(np.argmax(labels, axis=1), predictions)
+        accuracy = accuracy_score(labels.data, predictions)
         noise_accuracy.append(accuracy)
 
         print("Average accuracy of noise: {}".format(np.average(noise_accuracy)))
