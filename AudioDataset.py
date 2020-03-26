@@ -18,8 +18,8 @@ class NoisyMusicDataset(Dataset):
         self.folderIndex = folderIndex
         self.musicIndex = 0
 
-        self.noiseMfcc = np.empty((1, 57330))
-        self.noisyMusicMfcc = np.empty((1, 57330))
+        self.noiseMfcc = np.empty((64, 112))
+        self.noisyMusicMfcc = np.empty((64, 112))
 
     def __iter__(self):
         self.__next__()
@@ -41,7 +41,7 @@ class NoisyMusicDataset(Dataset):
         noise, _ = librosa.load(noiseFile.as_posix(), mono=True, sr=self.samplerate, duration=1.30)
         noiseNeg = np.negative(noise)
         noise_mfcc = librosa.feature.mfcc(noiseNeg[:57330], sr=self.samplerate, n_mfcc=64)
-        self.noiseMfcc = noise[:57330]
+        self.noiseMfcc = noise_mfcc
 
         # SAMPLE A NOISY MUSIC
         raw_music = sf.SoundFile(musicFile.as_posix(), channels=1, samplerate=self.samplerate, subtype='FLOAT')
@@ -49,7 +49,7 @@ class NoisyMusicDataset(Dataset):
         music_transpose = raw_music_read.T
 
         music_mfcc = librosa.feature.mfcc(music_transpose, sr=self.samplerate, n_mfcc=64)
-        self.noisyMusicMfcc = music_transpose
+        self.noisyMusicMfcc = music_mfcc
 
         self.musicIndex += 1
 
