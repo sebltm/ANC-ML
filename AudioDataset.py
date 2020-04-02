@@ -9,17 +9,20 @@ from torch.utils.data import Dataset
 
 class NoisyMusicDataset(Dataset):
 
-    def __init__(self, samplerate=44100, folderIndex=0):
+    def __init__(self, musicFolder, duration=1.30, samplerate=44100, folderIndex=0):
         self.samplerate = samplerate
         self.baseFolder = Path("/home/sebltm/OneDrive/Documents/Exeter/BSc_Dissertation/Sounds")
         self.baseNoiseFolder = self.baseFolder / "UrbanSound8K/audio"
-        self.baseMusicFolder = self.baseFolder / "Processed"
+        self.baseMusicFolder = self.baseFolder / musicFolder
 
         self.folderIndex = folderIndex
         self.musicIndex = 0
 
-        self.noiseMfcc = np.empty((1, 57330))
-        self.noisyMusicMfcc = np.empty((1, 57330))
+        self.duration = duration
+        self.num_samples = int(duration * samplerate)
+
+        self.noiseMfcc = np.empty((1, self.num_samples))
+        self.noisyMusicMfcc = np.empty((1, self.num_samples))
 
     def __iter__(self):
         self.__next__()
@@ -38,17 +41,13 @@ class NoisyMusicDataset(Dataset):
         musicFile = self.currentMusicFolder / (str(self.musicIndex) + ".RAW")
 
         # SAMPLE A NOISE
-        noise, _ = librosa.load(noiseFile.as_posix(), mono=True, sr=self.samplerate, duration=1.30)
-        noiseNeg = np.negative(noise)
-        # noise_mfcc = librosa.feature.mfcc(noiseNeg[:57330], sr=self.samplerate, n_mfcc=64)
-        self.noiseMfcc = noise[:57330]
+        noise, _ = librosa.load(noiseFile.as_posix(), mono=True, sr=self.samplerate, duration=self.duration)
+        self.noiseMfcc = noise[:self.num_samples]
 
         # SAMPLE A NOISY MUSIC
         raw_music = sf.SoundFile(musicFile.as_posix(), channels=1, samplerate=self.samplerate, subtype='FLOAT')
-        raw_music_read = raw_music.read(dtype=np.float, always_2d=False)
+        raw_music_read = raw_music.read(dtype=np.float, always_2d=False)[:self.num_samples]
         music_transpose = raw_music_read.T
-
-        # music_mfcc = librosa.feature.mfcc(music_transpose, sr=self.samplerate, n_mfcc=64)
         self.noisyMusicMfcc = music_transpose
 
         self.musicIndex += 1
