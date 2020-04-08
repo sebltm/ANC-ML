@@ -5,8 +5,8 @@ from torch import nn
 
 import AudioDataset
 import GAN
+import Pytorch_Classifier
 import Pytorch_Generator
-import Pytorch_Transformer
 
 if __name__ == "__main__":
 
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         device = torch.device("cuda")
         generator.to(device)
 
-        generator.load_state_dict(torch.load("generatorGANModel0.pt"))
+        generator.load_state_dict(torch.load("generatorGANModel14.pt"))
         generator.eval()
 
         generator.generate(AudioDataset.NoisyMusicDataset(musicFolder="ProcessedTest", folderIndex=0), "GANOutput")
@@ -48,22 +48,28 @@ if __name__ == "__main__":
         device = torch.device("cuda")
         generator.to(device)
 
-        generator.load_state_dict(torch.load("generatorModel9.pt"))
+        generator.load_state_dict(torch.load("generatorModelNew1.pt"))
         generator.eval()
 
         generator.generate(AudioDataset.NoisyMusicDataset(musicFolder="ProcessedTest", folderIndex=0),
-                           "GeneratorOutput")
+                           "GeneratorNewOutput")
 
-    elif args == "transformer-train":
-        transformer = Pytorch_Transformer.TransformerModel()
+    elif args == "visualise-generator":
+        generator = Pytorch_Generator.Net()
 
-        criterion = nn.CrossEntropyLoss()
-        device = torch.device("cpu")
+        generator.load_state_dict(torch.load("generatorModelNew1.pt"))
+        generator.eval()
 
-        transformer.to(device)
-        criterion.to(device)
+        x = torch.zeros(1, 1, 57330, dtype=torch.float, requires_grad=False)
+        out = generator(x)
+        make_dot(out).render("GeneratorModelNoMFCC", format="png")
 
-        optimiser = torch.optim.SGD(transformer.parameters(), lr=5.0)
-        scheduler = torch.optim.lr_scheduler.StepLR(optimiser, 1, gamma=0.95)
+    elif args == "visualise-classifier":
+        classifier = Pytorch_Classifier.Net()
 
-        transformer.train_transformer(optimiser, criterion, device)
+        classifier.load_state_dict(torch.load("classifierGANModel.pt"))
+        classifier.eval()
+
+        x = torch.zeros(1, 2, 128, dtype=torch.float, requires_grad=False)
+        out = classifier(x)
+        make_dot(out).render("ClassifierModelNoMFCC", format="png")

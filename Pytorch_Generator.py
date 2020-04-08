@@ -109,6 +109,10 @@ class Net(nn.Module):
 
                 output = self(input_network_tensor)
 
+                for n in range(len(real_noise)):
+                    inverseNoise = np.negative(output.cpu().detach().numpy()[n])
+                    real_noise[n] += inverseNoise
+
                 labels_tensor = torch.as_tensor(real_noise, dtype=torch.float32).to(device)
                 loss = criterion(output, labels_tensor)
                 loss.backward()
@@ -117,10 +121,7 @@ class Net(nn.Module):
                 print("Epoch {}, batch {}, Generator loss: {}".format(epoch + 1, num_batch + 1, loss))
                 print()
 
-                # if num_batch % 500 == 0:
-                #     self.generate(iterator=AudioDataset.NoisyMusicDataset(folderIndex=1), folder="GeneratorOutput")
-
-            torch.save(self.state_dict(), "generatorModel" + str(epoch) + ".pt")
+            torch.save(self.state_dict(), "generatorModelNew" + str(epoch) + ".pt")
 
     def testGenerator(self, device):
         # test
