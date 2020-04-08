@@ -17,38 +17,38 @@ class Net(nn.Module):
         # Encoder
         self.encodingLayer1 = nn.Sequential(
             nn.Conv2d(1, 64, kernel_size=2, stride=1, padding=0),
-            # nn.BatchNorm2d(64),
+            nn.BatchNorm2d(64),
         )
 
         self.encodingLayer2 = nn.Sequential(
             nn.Conv2d(64, 128, kernel_size=2, stride=1, padding=0),
-            # nn.BatchNorm2d(128),
+            nn.BatchNorm2d(128),
         )
 
         self.encodingLayer3 = nn.Sequential(
             nn.Conv2d(128, 256, kernel_size=2, stride=1, padding=0),
-            # nn.BatchNorm2d(256),
+            nn.BatchNorm2d(256),
         )
 
         self.encodingLayer4 = nn.Sequential(
             nn.Conv2d(256, 512, kernel_size=2, stride=1, padding=0),
-            # nn.BatchNorm2d(512),
+            nn.BatchNorm2d(512),
         )
 
         # Decoder
         self.decodingLayer1 = nn.Sequential(
             nn.ConvTranspose2d(512, 256, kernel_size=2, stride=1, padding=0),
-            # nn.BatchNorm2d(256),
+            nn.BatchNorm2d(256),
         )
 
         self.decodingLayer2 = nn.Sequential(
             nn.ConvTranspose2d(256, 128, kernel_size=2, stride=1, padding=0),
-            # nn.BatchNorm2d(128),
+            nn.BatchNorm2d(128),
         )
 
         self.decodingLayer3 = nn.Sequential(
             nn.ConvTranspose2d(128, 64, kernel_size=2, stride=1, padding=0),
-            # nn.BatchNorm2d(64),
+            nn.BatchNorm2d(64),
         )
 
         self.decodingLayer4 = nn.Sequential(
@@ -156,13 +156,13 @@ class Net(nn.Module):
         if iterator is not None:
             self.iterator = iterator
 
-        size_batch = 10
+        size_batch = 1000
 
         for i in range(0, 20 * size_batch):
             _, music, noise_name, music_name = next(self.iterator)
             generatorInput = np.empty((1, 1, 128, 112))
 
-            if (i % 50) == 0:
+            if (i % 20) == 2:
                 generatorInput[0] = music
                 print(noise_name, music_name)
 

@@ -9,11 +9,11 @@ from torch.utils.data import Dataset
 
 class NoisyMusicDataset(Dataset):
 
-    def __init__(self, samplerate=44100, folderIndex=0):
+    def __init__(self, musicFolder, samplerate=44100, folderIndex=0):
         self.samplerate = samplerate
         self.baseFolder = Path("/home/sebltm/OneDrive/Documents/Exeter/BSc_Dissertation/Sounds")
         self.baseNoiseFolder = self.baseFolder / "UrbanSound8K/audio"
-        self.baseMusicFolder = self.baseFolder / "Processed"
+        self.baseMusicFolder = self.baseFolder / musicFolder
 
         self.folderIndex = folderIndex
         self.musicIndex = 0
