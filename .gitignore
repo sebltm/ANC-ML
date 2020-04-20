@@ -1,0 +1,7 @@
+/GeneratorOutput/
+/*.pt
+/GeneratorInvOutput/
+/GANOutput/
+/generator*TrainOutput.txt
+/Generator*/
+/Classifier*/

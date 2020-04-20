@@ -13,33 +13,33 @@ np.set_printoptions(threshold=sys.maxsize)
 class Net(nn.Module):
 
     def __init__(self):
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda")
+
+        self.iterator = AudioDataset.NoisyMusicDataset(noisy_music_folder="Processed")
 
         super(Net, self).__init__()
 
-        self.iterator = AudioDataset.NoisyMusicDataset()
-
         self.layer1 = nn.Sequential(
-            nn.Conv2d(2, 32, kernel_size=3, stride=1, padding=0),
+            nn.Conv1d(2, 32, kernel_size=3, stride=1, padding=0),
             nn.Tanhshrink(),
-            nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=0),
-            nn.MaxPool2d(kernel_size=2, stride=1),
+            nn.Conv1d(32, 64, kernel_size=3, stride=1, padding=0),
+            nn.MaxPool1d(kernel_size=2, stride=1),
             nn.Dropout(0.25)
         )
 
         self.layer2 = nn.Sequential(
-            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=0),
+            nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=0),
             nn.Tanhshrink(),
-            nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=0),
-            nn.MaxPool2d(kernel_size=2, stride=1),
+            nn.Conv1d(64, 128, kernel_size=3, stride=1, padding=0),
+            nn.MaxPool1d(kernel_size=2, stride=1),
             nn.Dropout(0.5)
         )
 
         self.layer3 = nn.Sequential(
-            nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=0),
+            nn.Conv1d(128, 128, kernel_size=3, stride=1, padding=0),
             nn.Tanhshrink(),
-            nn.Conv2d(128, 512, kernel_size=3, stride=1, padding=0),
-            nn.MaxPool2d(kernel_size=2, stride=1),
+            nn.Conv1d(128, 512, kernel_size=3, stride=1, padding=0),
+            nn.MaxPool1d(kernel_size=2, stride=1),
             nn.Dropout(0.5)
         )
 
@@ -59,14 +59,14 @@ class Net(nn.Module):
         x = self.fc1(x)
         return x
 
-    def trainClassifier(self, optimiser, criterion, device):
+    def train_classifier(self, optimiser, criterion, device):
         self.optimiser = optimiser
         self.criterion = criterion
         self.device = device
 
-        epochs = 3
-        batch = 15
-        size_batch = 10
+        epochs = 15
+        size_batch = 15
+        batch = 9 * 1000 // size_batch
 
         print("Training classifier with {} epochs, {} batches of size {}".format(epochs, batch, size_batch))
 
@@ -75,8 +75,8 @@ class Net(nn.Module):
             self.iterator = AudioDataset.NoisyMusicDataset()
             for num_batch in range(batch):
 
-                fake = np.empty((size_batch, 2, 128, 112))
-                real = np.empty((size_batch, 2, 128, 112))
+                fake = np.empty((size_batch, 2, 57330))
+                real = np.empty((size_batch, 2, 57330))
 
                 for i in range(size_batch):
                     noise, music, noise_file, music_file = next(self.iterator)
@@ -124,10 +124,10 @@ class Net(nn.Module):
         noise_accuracy = []
         size_batch = 2
 
-        self.iterator = AudioDataset.NoisyMusicDataset()
+        self.iterator = AudioDataset.NoisyMusicDataset(noisy_music_folder="Processed")
 
-        fake = np.empty((size_batch, 2, 128, 112))
-        real = np.empty((size_batch, 2, 128, 112))
+        fake = np.empty((size_batch, 2, 57330))
+        real = np.empty((size_batch, 2, 57330))
 
         for i in range(size_batch):
             music, noise = next(self.iterator)
