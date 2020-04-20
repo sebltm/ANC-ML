@@ -1,7 +1,6 @@
 import sys
 
 import torch
-from torch import nn
 
 import AudioDataset
 import GAN
@@ -17,13 +16,13 @@ if __name__ == "__main__":
         # Train a generator in a supervised manner
         generator = Pytorch_Generator.Net()
 
-        criterion = nn.MSELoss()
+        criterion = Pytorch_Generator.SignalDistortionRatio()
         device = torch.device("cuda")
 
         generator.to(device)
         criterion.to(device)
 
-        optimiser = torch.optim.Adam(generator.parameters(), lr=learning_rate)
+        optimiser = torch.optim.Adam(generator.parameters(), lr=1)
 
         generator.train_generator(optimiser, criterion, device)
 
@@ -40,7 +39,8 @@ if __name__ == "__main__":
         generator.load_state_dict(torch.load("generatorGANModel14.pt"))
         generator.eval()
 
-        generator.generate(AudioDataset.NoisyMusicDataset(musicFolder="ProcessedTest", folderIndex=0), "GANOutput")
+        generator.generate(AudioDataset.NoisyMusicDataset(noisy_music_folder="ProcessedTest", folder_index=0),
+                           "GANOutput")
 
     elif args == "generator-generate":
         generator = Pytorch_Generator.Net()
@@ -48,11 +48,11 @@ if __name__ == "__main__":
         device = torch.device("cuda")
         generator.to(device)
 
-        generator.load_state_dict(torch.load("generatorModelNew1.pt"))
+        generator.load_state_dict(torch.load("generatorModel0.pt"))
         generator.eval()
 
-        generator.generate(AudioDataset.NoisyMusicDataset(musicFolder="ProcessedTest", folderIndex=0),
-                           "GeneratorNewOutput")
+        generator.generate(AudioDataset.NoisyMusicDataset(noisy_music_folder="ProcessedTest", folder_index=0),
+                           "GeneratorOutputGen4")
 
     elif args == "visualise-generator":
         generator = Pytorch_Generator.Net()
@@ -62,7 +62,6 @@ if __name__ == "__main__":
 
         x = torch.zeros(1, 1, 57330, dtype=torch.float, requires_grad=False)
         out = generator(x)
-        make_dot(out).render("GeneratorModelNoMFCC", format="png")
 
     elif args == "visualise-classifier":
         classifier = Pytorch_Classifier.Net()
@@ -72,4 +71,3 @@ if __name__ == "__main__":
 
         x = torch.zeros(1, 2, 128, dtype=torch.float, requires_grad=False)
         out = classifier(x)
-        make_dot(out).render("ClassifierModelNoMFCC", format="png")

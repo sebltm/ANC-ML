@@ -15,7 +15,7 @@ class Net(nn.Module):
     def __init__(self):
         self.device = torch.device("cuda")
 
-        self.iterator = AudioDataset.NoisyMusicDataset(musicFolder="Processed")
+        self.iterator = AudioDataset.NoisyMusicDataset(noisy_music_folder="Processed")
 
         super(Net, self).__init__()
 
@@ -59,14 +59,14 @@ class Net(nn.Module):
         x = self.fc1(x)
         return x
 
-    def trainClassifier(self, optimiser, criterion, device):
+    def train_classifier(self, optimiser, criterion, device):
         self.optimiser = optimiser
         self.criterion = criterion
         self.device = device
 
-        epochs = 3
-        batch = 15
-        size_batch = 10
+        epochs = 15
+        size_batch = 15
+        batch = 9 * 1000 // size_batch
 
         print("Training classifier with {} epochs, {} batches of size {}".format(epochs, batch, size_batch))
 
@@ -124,7 +124,7 @@ class Net(nn.Module):
         noise_accuracy = []
         size_batch = 2
 
-        self.iterator = AudioDataset.NoisyMusicDataset(musicFolder="Processed")
+        self.iterator = AudioDataset.NoisyMusicDataset(noisy_music_folder="Processed")
 
         fake = np.empty((size_batch, 2, 57330))
         real = np.empty((size_batch, 2, 57330))

@@ -25,7 +25,7 @@ class GAN:
         self.optimiserGenerator = torch.optim.Adam(self.GeneratorModel.parameters(), lr=self.learning_rate)
         self.optimiserClassifier = torch.optim.Adam(self.ClassifierModel.parameters(), lr=self.learning_rate)
 
-        self.iterator = AudioDataset.NoisyMusicDataset(musicFolder="Processed")
+        self.iterator = AudioDataset.NoisyMusicDataset(noisy_music_folder="ProcessedNew")
 
     def weights_init(self, m):
         classname = m.__class__.__name__
@@ -41,10 +41,11 @@ class GAN:
         batch = 9 * 1000 // size_batch
 
         self.ClassifierModel.apply(self.weights_init)
+        self.ClassifierScheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimiserClassifier)
 
         print("Training GAN with {} epochs, {} batches of size {}".format(epochs, batch, size_batch))
 
-        self.ClassifierModel.train()
+        # self.ClassifierModel.train()
         for epoch in range(epochs):
 
             if epoch == 0:
@@ -57,17 +58,20 @@ class GAN:
                                                             lr=self.learning_rate / 100)
 
             self.GeneratorModel.train()
-            self.iterator = AudioDataset.NoisyMusicDataset(musicFolder="Processed")
+            self.iterator = AudioDataset.NoisyMusicDataset(noisy_music_folder="ProcessedNew")
+
             for num_batch in range(batch):
 
                 real_classifier = np.empty((size_batch, 2, 57330))
+                real_noise = np.empty((size_batch, 1, 57330))
                 music_generator = np.empty((size_batch, 1, 57330))
 
                 for i in range(size_batch):
-                    noise, music, noise_name, music_name = next(self.iterator)
+                    noise, noisy_music, music, noise_name, noisy_music_name, music_name = next(self.iterator)
 
-                    real_classifier[i] = np.vstack(([music], [noise]))
-                    music_generator[i] = [music]
+                    real_classifier[i] = np.vstack(([music], [music]))
+                    real_noise[i] = [noise]
+                    music_generator[i] = [noisy_music]
 
                 #######################################################################################
                 ################################# TRAIN DISCRIMINATOR #################################
@@ -86,11 +90,14 @@ class GAN:
                 # fake
                 generator_output = self.GeneratorModel(generator_input).detach()
 
+
                 # rebundle the generator's output into a batch for the classifier
                 fake_data = np.empty((size_batch, 2, 57330))
                 for i in range(size_batch):
-                    generator_output_cpu = generator_output.cpu().detach().numpy()
-                    fake_data[i] = np.vstack(([real_classifier[i][1]], generator_output_cpu[i]))
+                    inverseNoise = np.negative(generator_output.cpu().detach().numpy()[i])
+                    music_generator[i] += inverseNoise
+
+                    fake_data[i] = np.vstack(([real_classifier[i][0]], music_generator[i]))
 
                 fake_data = torch.as_tensor(fake_data, dtype=torch.float32).to(self.device)
                 classifier_fake = self.ClassifierModel(fake_data)
@@ -104,12 +111,6 @@ class GAN:
                 ################################### TRAIN GENERATOR ###################################
                 #######################################################################################
                 self.GeneratorModel.zero_grad()
-
-                # rebundle the generator's output into a batch for the classifier
-                fake_data = np.empty((size_batch, 2, 57330))
-                for i in range(size_batch):
-                    generator_output_cpu = generator_output.cpu().detach().numpy()
-                    fake_data[i] = np.vstack(([real_classifier[i][0]], generator_output_cpu[i]))
 
                 fake_data = torch.as_tensor(fake_data, dtype=torch.float32).to(self.device)
                 classifier_fake = self.ClassifierModel(fake_data)
